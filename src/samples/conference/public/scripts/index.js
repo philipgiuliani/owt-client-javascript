@@ -40,6 +40,23 @@ const runSocketIOSample = function() {
     let subscriptionForMixedStream;
     let myRoom;
 
+    function subscribeForDemo(stream) {
+        console.log("Subscribing to stream", stream.id);
+        conference.subscribe(stream, {
+            audio: true,
+            video: {}
+        }).then((subscription) => {
+            console.log("Susbcription for stream", stream.id, "successful");
+            subscription.addEventListener("mute", () => {
+                console.log("Mute event for stream", stream.id, "called");
+            });
+
+            subscription.addEventListener("unmute", () => {
+                console.log("Mute event for stream", stream.id, "called");
+            });
+        });
+    }
+
     function getParameterByName(name) {
         name = name.replace(/[\[]/, '\\\[').replace(/[\]]/, '\\\]');
         var regex = new RegExp('[\\?&]' + name + '=([^&#]*)'),
@@ -128,6 +145,7 @@ const runSocketIOSample = function() {
         isSelf = isSelf?isSelf:event.stream.id != publicationGlobal.id;
         subscribeForward && isSelf && subscribeAndRenderVideo(event.stream);
         mixStream(myRoom, event.stream.id, 'common', serverUrlBase);
+        subscribeForDemo(event.stream);
         event.stream.addEventListener('ended', () => {
             console.log(event.stream.id + ' is ended.');
         });
@@ -204,6 +222,8 @@ const runSocketIOSample = function() {
                 }
                 var streams = resp.remoteStreams;
                 for (const stream of streams) {
+                    subscribeForDemo(stream);
+
                     if(!subscribeForward){
                       if (stream.source.audio === 'mixed' || stream.source.video ===
                         'mixed') {
